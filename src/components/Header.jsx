@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import '../Styles/Header.css';
+import logo from '../assets/Silvvy_logo_pink.png';
 
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -14,7 +15,7 @@ const Header = () => {
   return (
     <header className="header">
       <div className="header-logo">
-        <img src="/path-to-your-logo.png" alt="Logo" />
+        <img src={logo} alt="Logo" />
       </div>
       <nav className={`header-navigation ${menuOpen ? 'open' : ''}`}>
         <div className="menu-toggle" onClick={toggleMenu}>

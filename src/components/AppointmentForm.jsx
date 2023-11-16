@@ -1,8 +1,9 @@
 // components/AppointmentForm.jsx
 import { useState } from 'react';
-// import sanityClient from '../services/sanity';
+import client from '../SanityClient';
 import '../Styles/AppointmentForm.CSS'; // Import the stylesheet
 import Header from './Header';
+
 
 const services = ['Lash', 'Brows', 'Lips'];
 
@@ -32,9 +33,10 @@ const AppointmentForm = () => {
   };
 
   const isValidTime = () => {
-    const selectedTime = new Date(`2023-01-01T${formData.time}`);
-    const startTime = new Date(`2023-01-01T10:30:00`);
-    const endTime = new Date(`2023-01-01T17:00:00`);
+    const currentYear = new Date().getFullYear();
+    const selectedTime = new Date(`${currentYear}-01-01T${formData.time}`);
+    const startTime = new Date(`${currentYear}-01-01T10:30:00`);
+    const endTime = new Date(`${currentYear}-01-01T17:00:00`);
 
     return selectedTime >= startTime && selectedTime <= endTime;
   };
@@ -56,17 +58,24 @@ const AppointmentForm = () => {
     // Validate form fields if needed
 
     try {
+      console.log('Submitting with credentials:', client.config());
+
+      // Log the data being submitted
+      console.log('Data being submitted:', formData);
+
       // Submit data to Sanity backend
-    //   await sanityClient.create({
-    //     _type: 'appointment',
-    //     name: formData.name,
-    //     email: formData.email,
-    //     phoneNumber: formData.phoneNumber,
-    //     service: formData.service,
-    //     subcategory: formData.subcategory,
-    //     date: formData.date,
-    //     time: formData.time,
-    //   });
+      const response = await client.create({
+        _type: 'appointment',
+        name: formData.name,
+        email: formData.email,
+        phoneNumber: formData.phoneNumber,
+        service: formData.service,
+        subcategory: formData.subcategory,
+        date: formData.date,
+        time: formData.time,
+      });
+
+      console.log('Response from Sanity:', response);
 
       // Clear form after successful submission
       setFormData({

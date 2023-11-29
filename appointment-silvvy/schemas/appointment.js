@@ -1,72 +1,62 @@
 // schemas/appointment.js
-
 export default {
-    name: 'appointment',
-    title: 'Appointment List',
-    type: 'document',
-    fields: [
-      {
-        name: 'name',
-        title: 'Name',
-        type: 'string',
-        validation: (Rule) => Rule.required(),
-      },
-      {
-        name: 'email',
-        title: 'Email',
-        type: 'string',
-        validation: (Rule) => Rule.required().email(),
-      },
-      {
-        name: 'phoneNumber',
-        title: 'Phone Number',
-        type: 'string',
-        validation: (Rule) => Rule.required(),
-      },
-      {
-        name: 'service',
-        title: 'Service',
-        type: 'string',
-        validation: (Rule) => Rule.required(),
-        options: {
-          list: ['Lash', 'Brows', 'Lips'],
-        },
-      },
-      {
-        name: 'subcategory',
-        title: 'Subcategory',
-        type: 'string',
-        validation: (Rule) => Rule.required(),
-        options: {
-          list: [
-            { title: 'Classic', value: 'Classic' },
-            { title: 'Volume', value: 'Volume' },
-            { title: 'Hybrid', value: 'Hybrid' },
-            { title: 'Microblading', value: 'Microblading' },
-            { title: 'Shading', value: 'Shading' },
-            { title: 'Tinting', value: 'Tinting' },
-            { title: 'Lip Blush', value: 'Lip Blush' },
-            { title: 'Lip Liner', value: 'Lip Liner' },
-            { title: 'Full Lips', value: 'Full Lips' },
-          ],
-        },
-      },
-      {
-        name: 'date',
-        title: 'Date',
-        type: 'date',
-        validation: (Rule) => Rule.required(),
-      },
-      {
-        name: 'time',
-        title: 'Time',
-        type: 'string',
-        validation: (Rule) => Rule.required(),
-      },
-    ],
-    access: {
-      create: true,
+  name: 'appointment',
+  title: 'Appointment List',
+  type: 'document',
+  fields: [
+    {
+      name: 'name',
+      title: 'Name',
+      type: 'string',
+      validation: (Rule) => Rule.required(),
     },
-    initialValue: () => ({}),
-  };
-  
+    {
+      name: 'email',
+      title: 'Email',
+      type: 'string',
+      validation: (Rule) => Rule.required().email(),
+    },
+    {
+      name: 'phoneNumber',
+      title: 'Phone Number',
+      type: 'string',
+      validation: (Rule) => Rule.required(),
+    },
+    {
+      name: 'service',
+      title: 'Service',
+      type: 'reference',
+      to: [{ type: 'service' }],
+      validation: (Rule) => Rule.required(),
+    },
+    {
+      name: 'subcategory',
+      title: 'Subcategory',
+      type: 'reference',
+      to: [{ type: 'subcategory' }],
+      validation: (Rule) => Rule.required(),
+    },
+    {
+      name: 'price',
+      title: 'Price',
+      type: 'number', // You can adjust the type based on your requirements
+      validation: (Rule) => Rule.required(),
+    },
+    {
+      name: 'date',
+      title: 'Date',
+      type: 'date',
+      validation: (Rule) => Rule.required(),
+    },
+    {
+      name: 'time',
+      title: 'Time',
+      type: 'string',
+      validation: (Rule) => Rule.required(),
+    },
+  ],
+  access: {
+    create: true,
+  },
+  initialValue: () => ({}),
+};

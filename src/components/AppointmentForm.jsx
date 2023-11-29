@@ -1,20 +1,22 @@
-// components/AppointmentForm.jsx
-import { useState, useEffect } from "react";
-import client from "../SanityClient";
-import "../Styles/AppointmentForm.CSS"; // Import the stylesheet
-import Header from "./Header";
+import { useState, useEffect } from 'react';
+import client from '../SanityClient';
+import '../Styles/AppointmentForm.css'; // Import the stylesheet
+import Header from './Header';
 
 const AppointmentForm = () => {
   const [services, setServices] = useState([]);
-  const [subcategories, setSubcategories] = useState({});
+  const [subcategories, setSubcategories] = useState([]);
+  const [subcategoryPrice, setSubcategoryPrice] = useState(null);
+  const [selectedSubcategory, setSelectedSubcategory] = useState(null);
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phoneNumber: "",
-    service: "",
-    subcategory: "",
-    date: "",
-    time: "",
+    name: '',
+    email: '',
+    phoneNumber: '',
+    service: '',
+    subcategory: '',
+    date: '',
+    time: '',
+    price: '', 
   });
 
   useEffect(() => {
@@ -24,38 +26,46 @@ const AppointmentForm = () => {
         const response = await client.fetch('*[_type == "service"]');
         setServices(response);
       } catch (error) {
-        console.error("Error fetching services:", error);
-      }
-    };
-
-    // Fetch subcategories from Sanity
-    const fetchSubcategories = async () => {
-      try {
-        const response = await client.fetch('*[_type == "subcategory"]');
-        const subcategoriesByService = response.reduce((acc, subcategory) => {
-          const serviceName = subcategory.service._ref;
-          acc[serviceName] = acc[serviceName] || [];
-          acc[serviceName].push(subcategory);
-          return acc;
-        }, {});
-
-        console.log("Subcategories by service:", subcategoriesByService);
-        setSubcategories(subcategoriesByService);
-      } catch (error) {
-        console.error("Error fetching subcategories:", error);
+        console.error('Error fetching services:', error);
       }
     };
 
     fetchServices();
-    fetchSubcategories();
   }, []);
 
-  const handleChange = (e) => {
+  const fetchSubcategoriesForService = async (serviceId) => {
+    try {
+      // Fetch subcategories that reference the selected service
+      const response = await client.fetch(
+        '*[_type == "subcategory" && references($service)]',
+        {
+          service: serviceId,
+        }
+      );
+      return response;
+    } catch (error) {
+      console.error('Error fetching subcategories:', error);
+      return [];
+    }
+  };
+
+  const handleChange = async (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
       [name]: value,
     }));
+
+    if (name === 'service') {
+      const subcategoriesForService = await fetchSubcategoriesForService(value);
+      setSubcategories(subcategoriesForService);
+    }
+
+    if (name === 'subcategory') {
+      const selectedSubcategory = subcategories.find((subcategory) => subcategory._id === value);
+      setSelectedSubcategory(selectedSubcategory);
+      setSubcategoryPrice(selectedSubcategory ? selectedSubcategory.price : null);
+    }
   };
 
   const isValidTime = () => {
@@ -73,19 +83,12 @@ const AppointmentForm = () => {
     return selectedDate.getDay() >= 1 && selectedDate.getDay() <= 6;
   };
 
-  const getPriceForSubcategory = (subcategoryID) => {
-    const subcategory = subcategories[formData.service].find(
-      (subcategory) => subcategory._id === subcategoryID
-    );
-    return subcategory ? subcategory.price : null;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!isValidTime() || !isValidDate()) {
       alert(
-        "Please select a valid date and time (Monday to Saturday, 10:30 AM to 5 PM)."
+        'Please select a valid date and time (Monday to Saturday, 10:30 AM to 5 PM).'
       );
       return;
     }
@@ -95,34 +98,49 @@ const AppointmentForm = () => {
     try {
       // Log the data being submitted
 
+      
+
       // Submit data to Sanity backend
       await client.create({
-        _type: "appointment",
+        _type: 'appointment',
         name: formData.name,
         email: formData.email,
         phoneNumber: formData.phoneNumber,
-        service: formData.service,
-        subcategory: formData.subcategory,
+        service: {
+          _type: 'reference',
+          _ref: formData.service,
+        },
+        subcategory: {
+          _type: 'reference',
+          _ref: formData.subcategory,
+        },
+        price: selectedSubcategory ? selectedSubcategory.price : null,
+        
         date: formData.date,
         time: formData.time,
       });
 
       // Clear form after successful submission
       setFormData({
-        name: "",
-        email: "",
-        phoneNumber: "",
-        service: "",
-        subcategory: "",
-        date: "",
-        time: "",
+        name: '',
+        email: '',
+        phoneNumber: '',
+        service: '',
+        subcategory: '',
+        date: '',
+        time: '',
+        price: '',
+        subcategoryPrice: '',
       });
 
+      // Clear selectedSubcategory to hide the div containing the price
+    setSelectedSubcategory(null);
+
       // Optionally, show a success message to the user
-      alert("Appointment booked successfully!");
+      alert('Appointment booked successfully!');
     } catch (error) {
       // Handle error (e.g., show an error message)
-      console.error("Error submitting appointment:", error);
+      console.error('Error submitting appointment:', error);
     }
   };
 
@@ -175,37 +193,39 @@ const AppointmentForm = () => {
               Select a service
             </option>
             {services.map((service) => (
-              <option key={service.name} value={service.name}>
+              <option key={service._id} value={service._id}>
                 {service.name}
               </option>
             ))}
           </select>
         </label>
 
-        {formData.service && subcategories[formData.service] && (
-          <>
-            <label>
-              Subcategory:
-              <select
-                name="subcategory"
-                value={formData.subcategory}
-                onChange={handleChange}
-                required
-              >
-                <option value="" disabled>
-                  Select a subcategory
+        {formData.service && (
+          <label>
+            Subcategory:
+            <select
+              name="subcategory"
+              value={formData.subcategory}
+              onChange={handleChange}
+              required
+            >
+              <option value="" disabled>
+                Select a subcategory
+              </option>
+              {subcategories.map((subcategory) => (
+                <option key={subcategory._id} value={subcategory._id}>
+                  {subcategory.name}
                 </option>
-                {subcategories[formData.service].map((subcategory) => (
-                  <option key={subcategory._id} value={subcategory._id}>
-                    {subcategory.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+              ))}
+            </select>
+          </label>
+        )}
 
-            {/* Display price based on selected subcategory */}
-            <p>Price: {getPriceForSubcategory(formData.subcategory)}</p>
-          </>
+        {selectedSubcategory && (
+          <div>
+            
+            Price: ₦{subcategoryPrice}
+          </div>
         )}
 
         <label>
@@ -230,7 +250,7 @@ const AppointmentForm = () => {
           />
         </label>
 
-        <button type="submit">Submit Appointment</button>
+        <button type="submit">Book Appointment</button>
       </form>
     </>
   );

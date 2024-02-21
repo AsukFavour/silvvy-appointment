@@ -140,7 +140,7 @@ const AppointmentForm = () => {
       alert('Appointment booked successfully!');
     } catch (error) {
       // Handle error (e.g., show an error message)
-      console.error('Error submitting appointment:', error);
+      console.error('Error submitting appointment omo:', error);
     }
   };
 

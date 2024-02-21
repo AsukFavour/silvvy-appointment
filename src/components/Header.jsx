@@ -1,5 +1,5 @@
 // components/Header.jsx
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import '../Styles/Header.css';
 import logo from '../assets/Silvvy_logo_pink.png';
@@ -9,7 +9,6 @@ const Header = () => {
 
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
-    console.log('Menu Toggled:', menuOpen);
   };
 
   return (
@@ -25,19 +24,7 @@ const Header = () => {
         </div>
         <ul>
           <li>
-            <Link to="/" onClick={toggleMenu}>
-              Home
-            </Link>
-          </li>
-          <li>
-            <Link to="/appointments" onClick={toggleMenu}>
-              Appointments
-            </Link>
-          </li>
-          <li>
-            <Link to="/appointment-list" onClick={toggleMenu}>
-              Appointment List
-            </Link>
+            <Link to="/">Home</Link>
           </li>
         </ul>
       </nav>

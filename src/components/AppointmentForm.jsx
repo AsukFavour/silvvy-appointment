@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import client from '../SanityClient';
 import '../Styles/AppointmentForm.css'; // Import the stylesheet
 import Header from './Header';
+import logo from '../assets/Silvvy_logo_pink.png';
+import { useFlutterwave } from 'flutterwave-react-v3';
+
 
 const AppointmentForm = () => {
   const [services, setServices] = useState([]);
@@ -83,7 +86,29 @@ const AppointmentForm = () => {
     return selectedDate.getDay() >= 1 && selectedDate.getDay() <= 6;
   };
 
-  const handleSubmit = async (e) => {
+ 
+
+  const config = {
+    public_key: 'FLWPUBK_TEST-6e5439ace1ccba8e51f2399f835ac2e6-X',
+    tx_ref: Date.now(),
+    amount: subcategoryPrice * 100, // Convert to kobo or cent depending on your currency
+    currency: 'NGN', // Change this to your currency code
+    payment_options: 'card,mobilemoney,ussd',
+    customer: {
+      email: formData.email,
+      phone_number: formData.phoneNumber,
+      name: formData.name,
+    },
+    customizations: {
+      title: 'Appointment Payment',
+      description: 'Payment for appointment booking',
+      logo: logo,
+    },
+  };
+  const initializePayment = useFlutterwave(config)
+
+
+ const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!isValidTime() || !isValidDate()) {
@@ -92,14 +117,30 @@ const AppointmentForm = () => {
       );
       return;
     }
-
     // Validate form fields if needed
-
     try {
-      // Log the data being submitted
-
       
+      // Initialize payment
+    const response = await initializePayment;
+      // Check payment response
+    if (response.status === 'success') {
+      // Payment successful, proceed to submit appointment
+      await submitAppointment();
+    } else {
+      // Payment failed or was cancelled
+      console.error('Payment failed:', response);
+      alert('Payment was not successful. Please try again.');
+    }
+  } catch (error) {
+    // Handle error (e.g., show an error message)
+    console.error('Error initiating payment:', error);
+    alert('An error occurred while processing payment. Please try again.');
+  }
+   
+  };
 
+  const submitAppointment = async () => {
+    try {
       // Submit data to Sanity backend
       await client.create({
         _type: 'appointment',
@@ -115,11 +156,10 @@ const AppointmentForm = () => {
           _ref: formData.subcategory,
         },
         price: selectedSubcategory ? selectedSubcategory.price : null,
-        
         date: formData.date,
         time: formData.time,
       });
-
+  
       // Clear form after successful submission
       setFormData({
         name: '',
@@ -132,17 +172,15 @@ const AppointmentForm = () => {
         price: '',
         subcategoryPrice: '',
       });
-
-      // Clear selectedSubcategory to hide the div containing the price
-    setSelectedSubcategory(null);
-
+  
       // Optionally, show a success message to the user
       alert('Appointment booked successfully!');
     } catch (error) {
       // Handle error (e.g., show an error message)
-      console.error('Error submitting appointment omo:', error);
+      console.error('Error submitting appointment:', error);
     }
   };
+  
 
   return (
     <>

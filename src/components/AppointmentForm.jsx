@@ -3,7 +3,7 @@ import client from '../SanityClient';
 import '../Styles/AppointmentForm.css'; // Import the stylesheet
 import Header from './Header';
 import logo from '../assets/Silvvy_logo_pink.png';
-import { useFlutterwave } from 'flutterwave-react-v3';
+import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
 
 
 const AppointmentForm = () => {
@@ -91,7 +91,7 @@ const AppointmentForm = () => {
   const config = {
     public_key: 'FLWPUBK_TEST-6e5439ace1ccba8e51f2399f835ac2e6-X',
     tx_ref: Date.now(),
-    amount: subcategoryPrice * 100, // Convert to kobo or cent depending on your currency
+    amount: subcategoryPrice , // Convert to kobo or cent depending on your currency
     currency: 'NGN', // Change this to your currency code
     payment_options: 'card,mobilemoney,ussd',
     customer: {
@@ -105,7 +105,7 @@ const AppointmentForm = () => {
       logo: logo,
     },
   };
-  const initializePayment = useFlutterwave(config)
+  const handleFlutterPayment  = useFlutterwave(config)
 
 
  const handleSubmit = async (e) => {
@@ -121,7 +121,13 @@ const AppointmentForm = () => {
     try {
       
       // Initialize payment
-    const response = await initializePayment;
+    const response =  handleFlutterPayment({
+      callback: (response) => {
+         console.log(response);
+          closePaymentModal() // this will close the modal programmatically
+      },
+      onClose: () => {},
+    });
       // Check payment response
     if (response.status === 'success') {
       // Payment successful, proceed to submit appointment
@@ -134,7 +140,7 @@ const AppointmentForm = () => {
   } catch (error) {
     // Handle error (e.g., show an error message)
     console.error('Error initiating payment:', error);
-    alert('An error occurred while processing payment. Please try again.');
+    
   }
    
   };

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import client from '../SanityClient';
 import '../Styles/AppointmentForm.css'; // Import the stylesheet
 import Header from './Header';
-import logo from '../assets/Silvvy_logo_pink.png';
+import silvvylogo from '../assets/Silvvy_logo_pink.png';
 import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
 
 
@@ -100,9 +100,9 @@ const AppointmentForm = () => {
       name: formData.name,
     },
     customizations: {
-      title: 'Appointment Payment',
+      title: 'Silvvy_Signature',
       description: 'Payment for appointment booking',
-      logo: logo,
+      logo: silvvylogo,
     },
   };
   const handleFlutterPayment  = useFlutterwave(config)
@@ -121,25 +121,24 @@ const AppointmentForm = () => {
     try {
       
       // Initialize payment
-    const response =  handleFlutterPayment({
-      callback: (response) => {
-         console.log(response);
-          closePaymentModal() // this will close the modal programmatically
-      },
-      onClose: () => {},
-    });
-      // Check payment response
-    if (response.status === 'success') {
-      // Payment successful, proceed to submit appointment
-      await submitAppointment();
-    } else {
-      // Payment failed or was cancelled
-      console.error('Payment failed:', response);
-      alert('Payment was not successful. Please try again.');
-    }
-  } catch (error) {
-    // Handle error (e.g., show an error message)
-    console.error('Error initiating payment:', error);
+      await handleFlutterPayment({
+        callback: async (response) => {
+          // console.log(response);
+          if (response.status === 'successful') {
+            // Payment successful, proceed to submit appointment
+            await submitAppointment(); // Use await here to ensure submission before clearing the form
+          } else {
+            // Payment failed or was cancelled
+            // console.error('Payment failed:', response);
+            alert('Payment was not successful. Please try again.');
+          }
+          closePaymentModal(); // Close the payment modal
+        },
+        onClose: () => {},
+      });
+    } catch (error) {
+      // Handle error (e.g., show an error message)
+      // console.error('Error initiating payment:', error);
     
   }
    
@@ -183,7 +182,7 @@ const AppointmentForm = () => {
       alert('Appointment booked successfully!');
     } catch (error) {
       // Handle error (e.g., show an error message)
-      console.error('Error submitting appointment:', error);
+      // console.error('Error submitting appointment:', error);
     }
   };
   

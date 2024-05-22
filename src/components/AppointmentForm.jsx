@@ -86,7 +86,7 @@ const AppointmentForm = () => {
     return selectedDate.getDay() >= 1 && selectedDate.getDay() <= 6;
   };
 
- 
+
 
   const config = {
     public_key: 'FLWPUBK_TEST-6e5439ace1ccba8e51f2399f835ac2e6-X',

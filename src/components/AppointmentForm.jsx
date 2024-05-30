@@ -4,7 +4,7 @@ import '../Styles/AppointmentForm.css'; // Import the stylesheet
 import Header from './Header';
 import silvvylogo from '../assets/Silvvy_logo_pink.png';
 import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
-
+import emailjs from 'emailjs-com';
 
 const AppointmentForm = () => {
   const [services, setServices] = useState([]);
@@ -86,8 +86,6 @@ const AppointmentForm = () => {
     return selectedDate.getDay() >= 1 && selectedDate.getDay() <= 6;
   };
 
-
-
   const config = {
     public_key: 'FLWPUBK_TEST-6e5439ace1ccba8e51f2399f835ac2e6-X',
     tx_ref: Date.now(),
@@ -105,31 +103,55 @@ const AppointmentForm = () => {
       logo: silvvylogo,
     },
   };
-  const handleFlutterPayment  = useFlutterwave(config)
 
+  const handleFlutterPayment = useFlutterwave(config);
 
- const handleSubmit = async (e) => {
+  const sendEmail = async (formData) => {
+    const selectedsubcategory = subcategories.find(subcategory => subcategory._id === formData.subcategory)?.name;
+
+    // Format the date
+    const formattedDate = new Date(formData.date).toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+
+    const templateParams = {
+      to_name: formData.name,
+      to_email: formData.email,
+      service: selectedsubcategory,
+
+      price: selectedSubcategory ? selectedSubcategory.price : null,
+      date: formattedDate,
+      time: formData.time,
+    };
+
+    emailjs.send('service_67tnznd', 'template_95vzbar', templateParams, 'vsw_h-kjFl67GCFfV')
+      .then((response) => {
+        console.log('SUCCESS!', response.status, response.text);
+      }, (error) => {
+        console.error('FAILED...', error);
+      });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!isValidTime() || !isValidDate()) {
-      alert(
-        'Please select a valid date and time (Monday to Saturday, 10:30 AM to 5 PM).'
-      );
+      alert('Please select a valid date and time (Monday to Saturday, 10:30 AM to 5 PM).');
       return;
     }
-    // Validate form fields if needed
+
     try {
-      
       // Initialize payment
       await handleFlutterPayment({
         callback: async (response) => {
-          // console.log(response);
           if (response.status === 'successful') {
             // Payment successful, proceed to submit appointment
-            await submitAppointment(); // Use await here to ensure submission before clearing the form
+            await submitAppointment();
+            await sendEmail(formData);
           } else {
-            // Payment failed or was cancelled
-            // console.error('Payment failed:', response);
             alert('Payment was not successful. Please try again.');
           }
           closePaymentModal(); // Close the payment modal
@@ -137,11 +159,8 @@ const AppointmentForm = () => {
         onClose: () => {},
       });
     } catch (error) {
-      // Handle error (e.g., show an error message)
-      // console.error('Error initiating payment:', error);
-    
-  }
-   
+      console.error('Error initiating payment:', error);
+    }
   };
 
   const submitAppointment = async () => {
@@ -164,7 +183,7 @@ const AppointmentForm = () => {
         date: formData.date,
         time: formData.time,
       });
-  
+
       // Clear form after successful submission
       setFormData({
         name: '',
@@ -177,15 +196,13 @@ const AppointmentForm = () => {
         price: '',
         subcategoryPrice: '',
       });
-  
+
       // Optionally, show a success message to the user
       alert('Appointment booked successfully!');
     } catch (error) {
-      // Handle error (e.g., show an error message)
-      // console.error('Error submitting appointment:', error);
+      console.error('Error submitting appointment:', error);
     }
   };
-  
 
   return (
     <>
@@ -266,7 +283,6 @@ const AppointmentForm = () => {
 
         {selectedSubcategory && (
           <div>
-            
             Price: ₦{subcategoryPrice}
           </div>
         )}
